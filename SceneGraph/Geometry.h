@@ -17,8 +17,7 @@ using namespace std;
 class Geometry {
 
 public:
-	// Enums for the types of geometry that your scene graph is required to contain.
-    // Feel free to add more.
+
     enum geometryType {CUBE, SPHERE, CYLINDER, MESH};
     explicit Geometry(geometryType);
     virtual ~Geometry();
@@ -59,7 +58,7 @@ public:
         return type_;
     };
 
-	/// Compute an intersection with a WORLD-space ray.
+    // Compute an intersection with a WORLD-space ray
     Intersection intersect(const glm::mat4 &T, Ray ray_world) const;
 
 
@@ -71,7 +70,7 @@ protected:
     vector<glm::vec3> colors_;          // color buffer
     vector<unsigned int> indices_;      // index buffer
 
-    /// Compute an intersection with an OBJECT-LOCAL-space ray.
+    // Compute an intersection with an OBJECT-LOCAL-space ray
     virtual Intersection intersectImpl(const Ray &ray) const = 0;
 
 };
