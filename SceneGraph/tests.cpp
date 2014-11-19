@@ -162,7 +162,7 @@ void RunRaySphereTests()
     RunTest(
         "TODO Looking back",
         Test_RaySphereIntersect(ZNEGTEN_VECTOR, POSZ_VECTOR, BACK5_MATRIX),
-        4.0); // TODO change this to the right number
+        4.0); 
 
     RunTest(
         "West pole",
@@ -205,7 +205,7 @@ void RunRayPolyTests()
     RunTest(
         "TODO And turns",
         Test_RayPolyIntersect(HALFX_VECTOR, NEGZ_VECTOR, POINT_N2N10, POINT_2N10, POINT_010, BACK5ANDTURN_MATRIX),
-        5.5); // TODO change this to the right number
+        5.5); 
 }
 
 void RunRayCubeTests()
@@ -238,7 +238,7 @@ void RunRayCubeTests()
     RunTest(
         "TODO Strafing the cube",
         Test_RayCubeIntersect(NEGFIVEOFIVE_VECTOR, POSXNEGZ_NORM_VECTOR, IDENTITY_MATRIX),
-        4.5 * SQRT_TWO); // TODO change this to the right number
+        4.5 * SQRT_TWO); 
 }
 
 void RunRayCylinderTests()
@@ -271,27 +271,15 @@ void RunRayCylinderTests()
     RunTest(
         "TODO DIY",
         Test_RayCylinderIntersect(POSXNEGZ_NORM_VECTOR, NEGFIVEOFIVE_NORM_VECTOR, DOUBLE_MATRIX),
-        0.0); //TODO change this to the right number
+        0.0); 
 }
 
 void RunYourTests()
 {
-    // TODO: It can be very useful to put tests of your own here. The unit
-    // tests above do NOT test everything!
-
-    // Example things you may want to test:
-    // * All of the cases and edge cases of your particular implementations
-    // * Various weird transformations: non-uniform scaling, etc.
-    // * Unnormalized ray inputs (not necessarily needed, depending on how you do things later on.)
-
-    // In addition to these, you might want to write your own tests to check
-    // the surface normals returned by intersection, especially if you have
-    // trouble with the debug images that you will generate.
 }
 
 void RunOurTests()
 {
-    // Leave this function emty; we'll use it for grading.
 }
 
 void ReportTest(std::string name, bool result)
@@ -302,7 +290,6 @@ void ReportTest(std::string name, bool result)
     if (result) {
         g_numSuccessful++;
     } else {
-        // It can be very useful to put a breakpoint here
         return;
     }
 }
