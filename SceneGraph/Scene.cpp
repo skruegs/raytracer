@@ -120,10 +120,7 @@ void Scene::Raycast() {
 	float magC = glm::length(viewDir);
 	
 
-	//fovy = (fovy * (PI/180))*2;
-	//fovy = fovy*2;
-	//fovy = (fovy * (PI/180));
-	//fovy = fovy*2;
+	fovy /= 2;
 	float fovh = atan((tan(fovy)) * (width / height));
 
 	glm::vec3 H = (A * magC * tan(fovh)) / magA;
@@ -139,10 +136,8 @@ void Scene::Raycast() {
 			Sx = (float)x/(width - 1);	
 			Sy = (float)y/(height - 1);
 
-			//Pw = M + (float)(2 * Sx - 1) * H - (float)(2 * Sy - 1) * V;	
-			Pw = (float)(2 * Sx - 1) * H - (float)(2 * Sy - 1) * V + M;	
-			//Ray ray = Ray(pos, glm::normalize(Pw - pos));
-			Ray ray = Ray(pos, -glm::normalize(Pw));
+			Pw = M + (float)(2 * Sx - 1) * H - (float)(2 * Sy - 1) * V;	
+			Ray ray = Ray(pos, glm::normalize(Pw - pos));
 
 			// --- find root ---
 			root = nodes.at(0);
@@ -173,12 +168,12 @@ void Scene::Raycast() {
 			}
 
 
-			//output(x, y)->Red =   n0 * 255;
-			//output(x, y)->Green = n1 * 255;
-			//output(x, y)->Blue =  n2 * 255;
-			output(width - x - 1, height - y - 1)->Red =   n0 * 255;
-			output(width - x - 1, height - y - 1)->Green = n1 * 255;
-			output(width - x - 1, height - y - 1)->Blue =  n2 * 255;
+			output(x, y)->Red =   n0 * 255;
+			output(x, y)->Green = n1 * 255;
+			output(x, y)->Blue =  n2 * 255;
+			//output(width - x - 1, height - y - 1)->Red =   n0 * 255;
+			//output(width - x - 1, height - y - 1)->Green = n1 * 255;
+			//output(width - x - 1, height - y - 1)->Blue =  n2 * 255;
 			
 			intersec->t = std::numeric_limits<float>::infinity();
 			intersec->normal = glm::vec3(0);
