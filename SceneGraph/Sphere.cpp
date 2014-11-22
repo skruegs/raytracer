@@ -122,10 +122,11 @@ Intersection Sphere::intersectImpl(const Ray &ray) const {
 	if (D < 0) {
         return isx;
 	}
-	D = sqrtf(D);
 
-	float t = (-0.5f)*(b+D)/a;
-
+	float t0 = (-0.5f)*(b + sqrt(D))/a;
+	float t1 = (-0.5f)*(b - sqrt(D))/a;
+	float t = min(t0, t1);
+	
 	if (t > 0.0f) {
         glm::vec3 hitpoint = ray.orig + t*ray.dir;
         glm::vec3 normal = (hitpoint - center_) / radius_;
