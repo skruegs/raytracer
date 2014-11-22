@@ -120,11 +120,10 @@ void Scene::Raycast() {
 	float magC = glm::length(viewDir);
 	
 
-	fovy /= 2;
-	float fovh = atan((tan(fovy)) * (width / height));
+	float fovh = atan((tan(fovy/2)) * (width / height));
 
 	glm::vec3 H = (A * magC * tan(fovh)) / magA;
-	glm::vec3 V = (B * magC * tan(fovy)) / magB;
+	glm::vec3 V = (B * magC * tan(fovy/2)) / magB;
 
 	float Sx, Sy;
 	glm::vec3 Pw;
