@@ -160,7 +160,7 @@ Intersection Mesh::intersectImpl(const Ray &ray) const
 }
 
 
-Intersection Mesh::intersectTri(const glm::mat4 &T, const Ray &ray, glm::vec3 p1,  glm::vec3 p2,  glm::vec3 p3) const{
+Intersection Mesh::intersectTri(const glm::mat4 &T, const Ray &ray, glm::vec3 p1,  glm::vec3 p2,  glm::vec3 p3) const {
 	
 	Intersection isx;
 	isx.t = -1;
@@ -200,23 +200,13 @@ Intersection Mesh::intersectTri(const glm::mat4 &T, const Ray &ray, glm::vec3 p1
     if (s < 0.0 || s > 1.0)         // I is outside T
         return isx;
     t = (uv * wu - uu * wv) / D;
-    if (t < 0.0 || (s + t) > 1.0)  // I is outside T
+    if (t < 0.0 || (s + t) > 1.0)   // I is outside T
         return isx;
 
 	// define isx to return after transforming normal 
     isx.t = r;
 	isx.normal = n;
 
-	// convert normal 
-	/*
-	if (isx.t != -1) {
-		const glm::vec3 normal_local = isx.normal;
-		glm::vec3 normal_world = glm::vec3(glm::transpose(glm::inverse(T)) *  glm::vec4(normal_local, 0));
-		if (glm::sign(glm::dot(normal_world, ray_world.dir)) > 0) 
-			normal_world = -normal_world;
-		isx.normal = normal_world;
-	}
-	*/
 	return isx;
 
 }

@@ -13,7 +13,7 @@
 
 using namespace std;
 
-// An abstract base class for geometry in the scene graph.
+// an abstract base class for geometry in the scene graph.
 class Geometry {
 
 public:
@@ -22,44 +22,21 @@ public:
     explicit Geometry(geometryType);
     virtual ~Geometry();
 
-
-    // Function for building vertex data, i.e. vertices, colors, normals, indices.
+    // function for building vertex data, i.e. vertices, colors, normals, indices.
     virtual void buildGeomtery() = 0;
 
-    // Getters
-    const vector<glm::vec3>& getVertices() const
-    {
-        return vertices_;
-    };
-    const vector<glm::vec3>& getNormals() const
-    {
-        return normals_;
-    };
-    const vector<glm::vec3>& getColors() const
-    {
-        return colors_;
-    };
-    const vector<unsigned int>& getIndices() const
-    {
-        return indices_;
-    };
+    // getters
+    const vector<glm::vec3>& getVertices() const { return vertices_; };
+    const vector<glm::vec3>& getNormals() const { return normals_; };
+    const vector<glm::vec3>& getColors() const { return colors_; };
+    const vector<unsigned int>& getIndices() const { return indices_; };
+	unsigned int getVertexCount() const { return vertices_.size(); };
+    unsigned int getIndexCount() const { return indices_.size(); };
+	const geometryType getGeometryType() const { return type_; };
+	bool isAway() { return away; };
 
-    unsigned int getVertexCount() const
-    {
-        return vertices_.size();
-    };
-    unsigned int getIndexCount() const
-    {
-        return indices_.size();
-    };
-
-    const geometryType getGeometryType() const
-    {
-        return type_;
-    };
-
-    // Compute an intersection with a WORLD-space ray
-    Intersection intersect(const glm::mat4 &T, Ray ray_world) const;
+	// compute an intersection with a WORLD-space ray
+    Intersection intersect(const glm::mat4 &T, Ray ray_world);
 
 
 protected:
@@ -70,9 +47,11 @@ protected:
     vector<glm::vec3> colors_;          // color buffer
     vector<unsigned int> indices_;      // index buffer
 
-    // Compute an intersection with an OBJECT-LOCAL-space ray
+    // compute an intersection with an OBJECT-LOCAL-space ray
     virtual Intersection intersectImpl(const Ray &ray) const = 0;
 
+	// used by traceRay function to check direction of normal for refraction
+	bool away;
 };
 
 #endif

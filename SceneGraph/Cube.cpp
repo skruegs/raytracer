@@ -149,7 +149,6 @@ Intersection Cube::intersectImpl(const Ray &ray) const {
 	else if (hitpoint[2] < -0.5 + 1e-3 && hitpoint[2] > -0.5 - 1e-3)
 		isx.normal = glm::vec3(0,0,-1);
 
-	//cout << isx.t << " " << isx.normal[0] << " " << isx.normal[1] << " " << isx.normal[2] << endl;
 	return isx;
 
 }

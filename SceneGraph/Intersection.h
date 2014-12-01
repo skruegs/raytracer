@@ -5,9 +5,11 @@
 #include <glm/glm.hpp>
 
 struct Intersection {
-    // The parameter `t` along the ray which was used. (A negative value indicates no intersection.)
+    // the parameter `t` along the ray which was used 
+	// (negative value indicates no intersection)
     float t;
-    // The surface normal at the point of intersection. (Ignored if t < 0.)
+
+    // surface normal at the point of intersection
     glm::vec3 normal;
 };
 

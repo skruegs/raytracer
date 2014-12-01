@@ -21,7 +21,7 @@ void Sphere::buildGeomtery()
     indices_.clear();
 
     // Find vertex positions for the sphere.
-    unsigned int subdiv_axis = 16;      // vertical slices
+    unsigned int subdiv_axis = 16;			// vertical slices
     unsigned int subdiv_height = 16;        // horizontal slices
     float dphi = PI / subdiv_height;
     float dtheta = 2.0f * PI / subdiv_axis;
@@ -119,14 +119,17 @@ Intersection Sphere::intersectImpl(const Ray &ray) const {
 	float c = glm::dot(center_, center_) +  glm::dot(ray.orig, ray.orig) - 2.0f * glm::dot(ray.orig, center_) - radius_*radius_;
 	float D = b*b + (-4.0f)*a*c;
 
-	if (D < 0) {
-        return isx;
-	}
+	if (D < 0) 
+		return isx;
 
-	float t0 = (-0.5f)*(b + sqrt(D))/a;
-	float t1 = (-0.5f)*(b - sqrt(D))/a;
-	float t = min(t0, t1);
-	
+	float t0 = (-b + sqrt(D)) / (2*a);
+	float t1 = (-b - sqrt(D)) / (2*a);
+
+	float t;
+	if (t0 < 0 && t1 >= 0) t = t1;
+	else if (t1 < 0 && t0 >= 0) t = t0;
+	else t = min(t0, t1);
+
 	if (t > 0.0f) {
         glm::vec3 hitpoint = ray.orig + t*ray.dir;
         glm::vec3 normal = (hitpoint - center_) / radius_;
@@ -134,7 +137,7 @@ Intersection Sphere::intersectImpl(const Ray &ray) const {
 		isx.normal = normal;
     }
 
-	//cout << t <<" "<< isx.normal[0] << " " << isx.normal[1] << " " << isx.normal[2] << endl;
     return isx;
+
 }
 

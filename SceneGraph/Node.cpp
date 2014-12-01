@@ -8,7 +8,8 @@ Node::Node() {
     std::vector<Node*> children;
     parent = NULL;
 	color = glm::vec3(0.5,0.5,0.5);
-    
+    mat = NULL;
+
 	highlight = false;
 
 	translate_matrix = glm::mat4x4(1);

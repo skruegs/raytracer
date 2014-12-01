@@ -162,7 +162,7 @@ void RunRaySphereTests()
     RunTest(
         "TODO Looking back",
         Test_RaySphereIntersect(ZNEGTEN_VECTOR, POSZ_VECTOR, BACK5_MATRIX),
-        4.0); 
+        4.0); // TODO change this to the right number
 
     RunTest(
         "West pole",
@@ -205,7 +205,7 @@ void RunRayPolyTests()
     RunTest(
         "TODO And turns",
         Test_RayPolyIntersect(HALFX_VECTOR, NEGZ_VECTOR, POINT_N2N10, POINT_2N10, POINT_010, BACK5ANDTURN_MATRIX),
-        5.5); 
+        5.5); // TODO change this to the right number
 }
 
 void RunRayCubeTests()
@@ -238,7 +238,7 @@ void RunRayCubeTests()
     RunTest(
         "TODO Strafing the cube",
         Test_RayCubeIntersect(NEGFIVEOFIVE_VECTOR, POSXNEGZ_NORM_VECTOR, IDENTITY_MATRIX),
-        4.5 * SQRT_TWO); 
+        4.5 * SQRT_TWO); // TODO change this to the right number
 }
 
 void RunRayCylinderTests()
@@ -271,7 +271,7 @@ void RunRayCylinderTests()
     RunTest(
         "TODO DIY",
         Test_RayCylinderIntersect(POSXNEGZ_NORM_VECTOR, NEGFIVEOFIVE_NORM_VECTOR, DOUBLE_MATRIX),
-        0.0); 
+        0.0); //TODO change this to the right number
 }
 
 void RunYourTests()
@@ -280,6 +280,133 @@ void RunYourTests()
 
 void RunOurTests()
 {
+    // 2012 fall test cases
+	const vec3 SPHERE0P0(0,-1,-4);
+	const vec3 SPHERE0V0(0,1,0);
+	const mat4 SPHERE0TRANS(vec4(2,0,0,0), vec4(0,1,-1.732,0), vec4(0,1.732,1,0), vec4(0,3,-3,1));
+	RunTest(
+		"GRADING SPHERE 0",
+		Test_RaySphereIntersect(SPHERE0P0, SPHERE0V0, SPHERE0TRANS),
+		4 - std::sqrt(3.0));
+
+	const vec3 SPHERE1P0(1,0,3);
+	const vec3 SPHERE1V0(0,0,-1);
+	const mat4 SPHERE1TRANS(vec4(2,0,0,0), vec4(0,1,0,0), vec4(0,0,1,0), vec4(0,0,0,1));
+	RunTest(
+		"GRADING SPHERE 1",
+		Test_RaySphereIntersect(SPHERE1P0, SPHERE1V0, SPHERE1TRANS),
+		3 - std::sqrt(0.75));
+
+
+	const vec3 POLY0P[3] = {
+		vec3(0,2,-2),
+		vec3(-3,-2,2),
+		vec3(3,-2,2)
+	};
+
+
+	const vec3 POLY0P0(1,-1,2);
+	const vec3 POLY0V0(0,0,-1);
+
+	RunTest(
+		"GRADING POLY 0",
+		Test_RayPolyIntersect(POLY0P0, POLY0V0, POLY0P[0], POLY0P[1], POLY0P[2], IDENTITY_MATRIX),
+		1.0);
+
+	const mat4 POLY1TRANS(-3,0,0,0,   0,2,0,0,   0,0,-2,0,   0,0,0,1);
+
+	RunTest(
+		"GRADING POLY 1",
+		Test_RayPolyIntersect(POLY0P0, POLY0V0, POLY0P[0], POLY0P[1], POLY0P[2], POLY1TRANS),
+		3.0);
+
+
+	const vec3 CUBE0P0(1,1,1);
+	const vec3 CUBE0V0(-0.5773,-0.5773,-0.5773);
+
+	RunTest(
+		"GRADING CUBE 0",
+		Test_RayCubeIntersect(CUBE0P0, CUBE0V0, IDENTITY_MATRIX),
+		std::sqrt(3.0) - std::sqrt(0.75));
+
+	const mat4 CUBE1TRANS(vec4(0.7071,0.4082,0.5774,0), vec4(0,0.8165,-0.5774,0),  vec4(-0.7071,0.4082,0.5774,0), vec4(0,0,0,1));
+
+	const vec3 CUBE1P0(0,0,1);
+	const vec3 CUBE1V0(0,0,-1);
+
+	RunTest(
+		"GRADING CUBE 1",
+		Test_RayCubeIntersect(CUBE1P0, CUBE1V0, CUBE1TRANS),
+		1 - std::sqrt(0.75));
+	
+	const vec3 CYLINDER0P0(0.25, 0, 1);
+	const vec3 CYLINDER0V0(0, 0, -1);
+
+	RunTest(
+		"GRADING CYLINDER 0",
+		Test_RayCylinderIntersect(CYLINDER0P0, CYLINDER0V0, IDENTITY_MATRIX),
+		0.56699);
+
+	const mat4 CYLINDER1TRANS(vec4(4,0,0,0), vec4(0,4,0,0), vec4(0,0,4,0), vec4(0,0,0,1));	
+	const vec3 CYLINDER1P0(0, -4.5, -1.0);
+	const vec3 CYLINDER1V0(0, 0.7071, 0.7071);
+
+	RunTest(
+		"GRADING CYLINDER 1",
+		Test_RayCylinderIntersect(CYLINDER1P0, CYLINDER1V0, CYLINDER1TRANS),
+		3.5355);
+
+	// 2013 fall test cases
+	const mat4 HALF_MATRIX(vec4(0.5f, 0.0f, 0.0f, 0.0f),
+							 vec4(0.0f, 0.5f, 0.0f, 0.0f),
+							 vec4(0.0f, 0.0f, 0.5f, 0.0f),
+							 vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	const mat4 SCALE_MATRIX(vec4(0.5f, 0.0f, 0.0f, 0.0f),
+							 vec4(0.0f, 1.0f, 0.0f, 0.0f),
+							 vec4(0.0f, 0.0f, 2.0f, 0.0f),
+							 vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	RunTest(
+		"Inside sphere",
+		Test_RaySphereIntersect(vec3(0.5,0,0), vec3(1,0,0), DOUBLE_MATRIX),
+		1.5);
+
+	RunTest(
+		"Nonuniformly scaled sphere",
+		Test_RaySphereIntersect(vec3(-0.7,0,0), normalize(vec3(1,2,0)), SCALE_MATRIX),
+		0.671);
+
+	RunTest(
+		"Inside cube",
+		Test_RayCubeIntersect(vec3(-0.3,-0.1,0), normalize(vec3(1,3,0)), HALF_MATRIX),
+		0.158);
+
+	RunTest(
+		"Nonuniformly scaled cube",
+		Test_RayCubeIntersect(vec3(0.6,1.3,-0.1), normalize(vec3(2,3,1)), SCALE_MATRIX),
+		-1.0);
+
+	RunTest(
+		"Nonuniformly scaled triangle",
+		Test_RayPolyIntersect(vec3(0,0,-1), normalize(vec3(0.1,-0.05,1)), vec3(0.5,0.4,0.7),
+		vec3(-1.2,-0.4,0.6), vec3(0.6,-0.5,0.8), SCALE_MATRIX),
+		2.52);
+
+	RunTest(
+		"Inside cylinder intersect side",
+		Test_RayCylinderIntersect(vec3(0.25,0,0), vec3(1,0,0), DOUBLE_MATRIX),
+		0.75);
+
+	RunTest(
+		"Inside cylinder intersect cap",
+		Test_RayCylinderIntersect(vec3(0.25,0,0), vec3(0,-1,0), IDENTITY_MATRIX),
+		0.5);
+
+	RunTest(
+		"Nonuniformly scaled cylinder",
+		Test_RayCylinderIntersect(vec3(0.1,0.2,0.3), normalize(vec3(5,8,3)), SCALE_MATRIX),
+		0.26);
 }
 
 void ReportTest(std::string name, bool result)
@@ -290,6 +417,7 @@ void ReportTest(std::string name, bool result)
     if (result) {
         g_numSuccessful++;
     } else {
+        // It can be very useful to put a breakpoint here
         return;
     }
 }

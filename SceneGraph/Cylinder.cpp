@@ -103,6 +103,7 @@ void Cylinder::buildGeomtery()
 
 
 Intersection Cylinder::intersectImpl(const Ray &ray) const {
+
     Intersection isx;
     isx.t = -1;
 
@@ -146,21 +147,19 @@ Intersection Cylinder::intersectImpl(const Ray &ray) const {
 	// Find cap intersections -- t2 and t3 values
 	float a0 = -(glm::dot(dP, Va));
     float b0 = glm::dot(Va, ray.dir);
-	//float a0 = -glm::dot(Va, dP);
-    //float b0 = glm::dot(Va, ray.dir);
-	float t3 = a0 / b0;
-	if (t3 > 0 && glm::length(dP + ray.dir * t3) <= radius_) {
-		t_values.push_back(t3);
+
+	float t2 = a0 / b0;
+	if (t2 > 0 && glm::length(dP + ray.dir * t2) <= radius_) {
+		t_values.push_back(t2);
 		normal_values.push_back(glm::vec3(0,1,0));
 	}
 	
 	float a2 = -(glm::dot(dP2, Vb));
     float b2 = glm::dot(Vb, ray.dir);
-	//float a2 = -glm::dot(Vb, dP2);
-    //float b2 = glm::dot(Vb, ray.dir);
-	float t4 = a2 / b2;
-	if (t4 > 0 && glm::length((dP2 + ray.dir * t4)) <= radius_) {
-		t_values.push_back(t4);
+
+	float t3 = a2 / b2;
+	if (t3 > 0 && glm::length((dP2 + ray.dir * t3)) <= radius_) {
+		t_values.push_back(t3);
 		normal_values.push_back(glm::vec3(0,-1,0));
 	}
 	

@@ -1,6 +1,3 @@
-// NOTE: This definition forces GLM to use radians (not degrees) for ALL of its
-// angle arguments. The documentation may not always reflect this fact.
-// YOU SHOULD USE THIS IN ALL FILES YOU CREATE WHICH INCLUDE GLM
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -261,7 +258,7 @@ void keypress(unsigned char key, int x, int y)
 
     switch (key) {
 	case 'p':
-		scene->Raycast();
+		scene->traceImage();
 		break;
 
     case 'q':
@@ -519,13 +516,12 @@ void keypress(unsigned char key, int x, int y)
 
 	}
 
-
     glutPostRedisplay();
 }
 
 void mousepress(int button, int state, int x, int y)
 {
-    // Put any mouse events here
+    
 }
 
 void display()
@@ -545,11 +541,10 @@ void display()
     // Make sure you're using the right program for rendering
     glUseProgram(shaderProgram);
 
-    // TODO
-    // Draw the two components of our scene separately, for your scenegraphs it
-    // will help your sanity to do separate draws for each type of primitive
-    // geometry, otherwise your VBOs will get very, very complicated fast
-	
+
+    // Draw the components of scene
+	// -------------------------------
+
 	// get root node
 	Node* root = scene->nodes.at(0);
 
@@ -566,10 +561,6 @@ void display()
 	}
 	// traverse the nodes of the scene
 	traverse(root, modelmat);
-
-
-    // Draws the sphere with the specified model transformation matrix
-    //sampleDrawSquare(modelmat);
 
     // Move the rendering we just made onto the screen
     glutSwapBuffers();
@@ -596,8 +587,13 @@ void draw(Node* n, glm::mat4 model) {
 	// colors
 	vector<glm::vec3> cols;
     for (int i = 0; i < VERTICES; i++) {
-        if (n->highlight) cols.push_back(glm::vec3(1,1,1));
-		else cols.push_back(n->color);
+        if (n->highlight) {
+			cols.push_back(glm::vec3(1,1,1));
+		}
+		else {
+			if (n->mat == NULL) cols.push_back(n->color);
+			else cols.push_back(n->mat->diff_color);
+		}
     }
 
 	glBindBuffer(GL_ARRAY_BUFFER, vboPos);
@@ -651,155 +647,17 @@ void draw(Node* n, glm::mat4 model) {
 }
 
 
-/*
-void sampleUploadSquare()
-{
-    // Take a close look at how vertex, normal, color, and index informations are created and
-    // uploaded to the GPU for drawing. You will need to do something similar to get your
-    // scene graph to draw.
-
-    // =========================== Create some data to draw ====================================
-    // These four points define where the quad would be BEFORE transformations
-    // this is referred to as object-space and it's best to center geometry at the origin for easier transformations.
-    // Each vertex is {x,y,z,w} where w is the homogeneous coordinate
-
-    // Number of vertices
-    const int VERTICES = 4;
-    // Number of triangles
-    const int TRIANGLES = 2;
-
-    // Sizes of the various array elements below.
-    static const GLsizei SIZE_POS = sizeof(glm::vec3);
-    static const GLsizei SIZE_NOR = sizeof(glm::vec3);
-    static const GLsizei SIZE_COL = sizeof(glm::vec3);
-    static const GLsizei SIZE_TRI = 3 * sizeof(GLuint);
-
-    // Initialize an array of floats to hold our cube's position data.
-    // Each vertex is {x,y,z,w} where w is the homogeneous coordinate
-    glm::vec3 positions[VERTICES] = {
-        glm::vec3(-1, +1, -1),
-        glm::vec3(-1, -1, -1),
-        glm::vec3(+1, -1, -1),
-        glm::vec3(+1, +1, -1),
-    };
-
-    // Same as above for the cube's normal data.
-    glm::vec3 normals[VERTICES] = {
-        glm::vec3(0, 0, 1),
-        glm::vec3(0, 0, 1),
-        glm::vec3(0, 0, 1),
-        glm::vec3(0, 0, 1),
-    };
-
-    // Initialize an array of floats to hold our square's color data
-    // Color elements are in the range [0, 1], {r, g, b}
-    glm::vec3 colors[VERTICES] = {
-        glm::vec3(1, 0, 0),
-        glm::vec3(0, 1, 0),
-        glm::vec3(0, 0, 1),
-        glm::vec3(1, 1, 0),
-    };
-
-    // Initialize an array of six unsigned ints to hold our square's index data
-    GLuint indices[TRIANGLES][3] = {
-        0, 1, 2,
-        0, 2, 3,
-    };
-
-    // ================UPLOADING CODE (GENERALLY, ONCE PER CHANGE IN DATA)==============
-    // Now we put the data into the Vertex Buffer Object for the graphics system to use
-    glBindBuffer(GL_ARRAY_BUFFER, vboPos);
-    // Use STATIC_DRAW since the square's vertices don't need to change while the program runs.
-    // Take a look at STREAM_DRAW and DYNAMIC_DRAW to see when they should be used.
-    // Always make sure you are telling OpenGL the right size to make the buffer. Here we need 16 floats.
-    glBufferData(GL_ARRAY_BUFFER, VERTICES * SIZE_POS, &positions, GL_STATIC_DRAW);
-
-    // Bind+upload the color data
-    glBindBuffer(GL_ARRAY_BUFFER, vboCol);
-    glBufferData(GL_ARRAY_BUFFER, VERTICES * SIZE_POS, &colors, GL_STATIC_DRAW);
-
-    // Bind+upload the normals
-    glBindBuffer(GL_ARRAY_BUFFER, vboNor);
-    glBufferData(GL_ARRAY_BUFFER, VERTICES * SIZE_POS, &normals, GL_STATIC_DRAW);
-
-    // Bind+upload the indices to the GL_ELEMENT_ARRAY_BUFFER.
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIdx);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, TRIANGLES * SIZE_TRI, &indices, GL_STATIC_DRAW);
-
-    // Once data is loaded onto the GPU, we are done with the float arrays.
-    // For your scene graph implementation, you shouldn't create and delete the vertex information
-    // every frame. You would probably want to store and reuse them.
-}
-
-void sampleDrawSquare(glm::mat4 model)
-{
-    // Tell the GPU which shader program to use to draw things
-    glUseProgram(shaderProgram);
-
-    // Take a close look at how vertex, normal, color, and index informations
-    // are created and uploaded to the GPU for drawing. You will need to do
-    // something similar to get your scene graph to draw.
-    model = glm::rotate(model, rotation, glm::vec3(0, 0, 1));
-
-    // Number of faces (1 on a square)
-    const int FACES = 1;
-    // Number of triangles (2 per face)
-    const int TRIANGLES = 2 * FACES;
-
-    // =============================== Draw the data that we sent =================================
-    // Activate our three kinds of vertex information
-    glEnableVertexAttribArray(locationPos);
-    glEnableVertexAttribArray(locationCol);
-    glEnableVertexAttribArray(locationNor);
-
-    // Set the 4x4 model transformation matrices
-    // Pointer to the first element of the array
-    glUniformMatrix4fv(unifModel, 1, GL_FALSE, &model[0][0]);
-    // Also upload the inverse transpose for normal transformation
-    const glm::mat4 modelInvTranspose = glm::inverse(glm::transpose(model));
-    glUniformMatrix4fv(unifModelInvTr, 1, GL_FALSE, &modelInvTranspose[0][0]);
-
-    // Tell the GPU where the positions are: in the position buffer (4 components each)
-    glBindBuffer(GL_ARRAY_BUFFER, vboPos);
-    glVertexAttribPointer(locationPos, 3, GL_FLOAT, false, 0, NULL);
-
-    // Tell the GPU where the colors are: in the color buffer (4 components each)
-    glBindBuffer(GL_ARRAY_BUFFER, vboCol);
-    glVertexAttribPointer(locationCol, 3, GL_FLOAT, false, 0, NULL);
-
-    // Tell the GPU where the normals are: in the normal buffer (4 components each)
-    glBindBuffer(GL_ARRAY_BUFFER, vboNor);
-    glVertexAttribPointer(locationNor, 3, GL_FLOAT, false, 0, NULL);
-
-    // Tell the GPU where the indices are: in the index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIdx);
-
-    // Draw the elements. Here we are only drawing 2 triangles * 3 vertices per triangle, for a
-    // total of 6 elements.
-    glDrawElements(GL_TRIANGLES, TRIANGLES * 3, GL_UNSIGNED_INT, 0);
-
-    // Shut off the information since we're done drawing.
-    glDisableVertexAttribArray(locationPos);
-    glDisableVertexAttribArray(locationCol);
-    glDisableVertexAttribArray(locationNor);
-
-    // Check for OpenGL errors
-    printGLErrorLog();
-}*/
-
 void resize(int width, int height)
 {
     // Set viewport
 	glViewport(0, 0, scene->width, scene->height);
 
     // Get camera information
-    // Add code here if you want to play with camera settings/ make camera interactive.
-    glm::mat4 projection = glm::perspective(scene->fovy, scene->width / (float) scene->height, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(scene->fovy), scene->width / (float) scene->height, 0.1f, 100.0f);
     glm::mat4 camera = glm::lookAt(scene->pos, scene->pos + scene->viewDir, scene->viewUp);
     projection = projection * camera;
 
-    // Upload the projection matrix, which changes only when the screen or
-    // camera changes
+    // Upload the projection matrix, which changes only when the screen or camera changes
     glUseProgram(shaderProgram);
     glUniformMatrix4fv(unifViewProj, 1, GL_FALSE, &projection[0][0]);
 
@@ -809,7 +667,6 @@ void resize(int width, int height)
 
 std::string textFileRead(const char *filename)
 {
-    // http://insanecoding.blogspot.com/2011/11/how-to-read-in-file-in-c.html
     std::ifstream in(filename, std::ios::in);
     if (!in) {
         std::cerr << "Error reading file" << std::endl;

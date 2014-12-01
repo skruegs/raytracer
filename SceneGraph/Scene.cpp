@@ -2,12 +2,14 @@
 
 using namespace std;
 static const float PI = 3.141592653589f;
-#define GLM_FORCE_RADIANS
+static const float epsilon = 0.05f;
 
 Scene::Scene() {
 	intersec = new Intersection();
 	intersec->t = std::numeric_limits<float>::infinity();
 	intersec->normal = glm::vec3(0);
+	intersected_node = NULL;
+	lightBlocked = false;
 }
 
 bool Scene::readFile(const char* filename) {
@@ -35,6 +37,19 @@ bool Scene::readFile(const char* filename) {
 			ifs >> trash >> lightPos[0] >> lightPos[1] >> lightPos[2];
 			ifs >> trash >> lightColor[0] >> lightColor[1] >> lightColor[2];
 		}
+		else if (st.compare("MAT") == 0) {
+			
+			Material* mat = new Material();
+			ifs >> mat->name;
+			ifs >> trash >> mat->diff_color[0] >> mat->diff_color[1] >> mat->diff_color[2];
+			ifs >> trash >> mat->refl_color[0] >> mat->refl_color[1] >> mat->refl_color[2];
+			ifs >> trash >> mat->expo;
+			ifs >> trash >> mat->ior;
+			ifs >> trash >> mat->mirr;
+			ifs >> trash >> mat->tran;
+
+			materials.push_back(mat);
+		}
 		else if (st.compare("NODE") == 0) {
 			
 			Node* n = new Node();
@@ -48,7 +63,6 @@ bool Scene::readFile(const char* filename) {
 
 			glm::vec3 cent;
 			ifs >> trash >> cent[0] >> cent[1] >> cent[2];
-			//n->translate(cent[0], cent[1], cent[2]);
 
 			std::string parent_name;
 			ifs >> trash >> parent_name;
@@ -85,8 +99,23 @@ bool Scene::readFile(const char* filename) {
 				n->geo = NULL;
 			}
 
-			ifs >> trash >> n->color[0] >> n->color[1] >> n->color[2];
-		
+			std::string next;
+			ifs >> next;
+			if (next.compare("RGBA") == 0) {
+				ifs >> n->color[0] >> n->color[1] >> n->color[2];
+			}
+			else {
+				std::string mat_name;
+				ifs >> mat_name;
+				for (int i = 0; i < materials.size(); i++) {
+					if (materials.at(i)->name.compare(mat_name) == 0) {
+						n->mat = materials.at(i); 
+						break;
+					}
+				}
+			
+			}
+
 			nodes.push_back(n);
 		
 		}
@@ -105,8 +134,9 @@ bool Scene::readFile(const char* filename) {
 }
 
 
-
-void Scene::Raycast() {
+/* raytrace using config file variables and the current state
+ * of the scene graph; output BMP image */
+void Scene::traceImage() {
 
 	BMP output;
 	output.SetSize((int)width, (int)height);
@@ -118,27 +148,23 @@ void Scene::Raycast() {
 	float magA = glm::length(A);
 	float magB = glm::length(B);
 	float magC = glm::length(viewDir);
-	
 
-	float fovh = atan((tan(fovy/2)) * (width / height));
-
+	float fovh = atan((tan(glm::radians(fovy/2))) * (width / height));
+    
 	glm::vec3 H = (A * magC * tan(fovh)) / magA;
-	glm::vec3 V = (B * magC * tan(fovy/2)) / magB;
+	glm::vec3 V = (B * magC * tan(glm::radians(fovy/2))) / magB;
 
-	float Sx, Sy;
-	glm::vec3 Pw;
 	for (int y = 0; y < height; y++) {
-		cout << "Raycasting: line " << y+1 << "/480" << endl;
-
+		cout << "Raytracing: line " << y+1 << "/" << height << endl;
 		for (int x = 0; x < width; x++) {
-	
-			Sx = (float)x/(width - 1);	
-			Sy = (float)y/(height - 1);
 
-			Pw = M + (float)(2 * Sx - 1) * H - (float)(2 * Sy - 1) * V;	
+			float Sx = (float)x/(width - 1);	
+			float Sy = (float)y/(height - 1);
+
+			glm::vec3 Pw = M + (float)(2 * Sx - 1) * H - (float)(2 * Sy - 1) * V;
 			Ray ray = Ray(pos, glm::normalize(Pw - pos));
 
-			// --- find root ---
+			// -------- find root --------
 			root = nodes.at(0);
 			for (unsigned int i = 0; i < nodes.size(); i++) {
 				if (nodes.at(i)->parent == NULL) {
@@ -146,36 +172,21 @@ void Scene::Raycast() {
 					break;
 				}
 			}
-			//if there are other nodes with no parent, set their parent to root
 			for (unsigned int i = 0; i < nodes.size(); i++) {
 				if (nodes.at(i)->parent == NULL && nodes.at(i) != root) 
 					nodes.at(i)->parent = root;
 			}
-			// -----------------
-			
+			// ---------------------------
 
-			traverse(root, glm::mat4(1.0f), ray);
+			glm::vec3 color = traceRay(root, ray, 0);
 
-			float n0 = 0.0f, n1 = 0.0f, n2 = 0.0f;
-			if (intersec->t != -1) {
-				if (intersec->normal[0] < 0) intersec->normal[0] = 0;
-				if (intersec->normal[1] < 0) intersec->normal[1] = 0;
-				if (intersec->normal[2] < 0) intersec->normal[2] = 0;
-				n0 = intersec->normal[0];
-				n1 = intersec->normal[1];
-				n2 = intersec->normal[2];
-			}
+			color[0] = glm::clamp(color[0], 0.0f, 1.0f);
+			color[1] = glm::clamp(color[1], 0.0f, 1.0f);
+			color[2] = glm::clamp(color[2], 0.0f, 1.0f);
 
-
-			output(x, y)->Red =   n0 * 255;
-			output(x, y)->Green = n1 * 255;
-			output(x, y)->Blue =  n2 * 255;
-			//output(width - x - 1, height - y - 1)->Red =   n0 * 255;
-			//output(width - x - 1, height - y - 1)->Green = n1 * 255;
-			//output(width - x - 1, height - y - 1)->Blue =  n2 * 255;
-			
-			intersec->t = std::numeric_limits<float>::infinity();
-			intersec->normal = glm::vec3(0);
+			output(x,y)->Red	= color[0] * 255;
+			output(x,y)->Green	= color[1] * 255;
+			output(x,y)->Blue	= color[2] * 255;
 		}
 	}
 	cout << "Finished raycasting." << endl;
@@ -184,7 +195,72 @@ void Scene::Raycast() {
 
 
 
-void Scene::traverse(Node* n, glm::mat4 t, Ray ray) {
+glm::vec3 Scene::traceRay(Node* root, Ray ray, int depth) {
+	
+	// reset global variables
+	intersec->t = std::numeric_limits<float>::infinity();
+	intersec->normal = glm::vec3(0);
+	intersected_node = NULL;
+	lightBlocked = false;
+
+	// find intersection and intersected node
+	intersect(root, glm::mat4(1.0), ray);
+
+	// define color to be returned
+	glm::vec3 color = glm::vec3(0);
+	
+	// calculate pixel color
+	if (intersected_node != NULL) {
+
+		// point of intersection
+		glm::vec3 point = ray.orig + intersec->t * ray.dir;
+
+		// shadows
+		glm::vec3 lightDir = glm::normalize(lightPos - point);
+		pointToLightIntersect(root, glm::mat4(1.0f), Ray(point + lightDir*epsilon, lightDir));
+		color = glm::vec3(0.1,0.1,0.1) * intersected_node->mat->diff_color;
+		if (!lightBlocked) 
+			color = intersected_node->mat->calculateColor(pos, intersec->normal, point, lightPos, lightColor);
+
+		// limit recursion to a depth of 5
+		if (depth < 5) {
+
+			// reflection
+			if (intersected_node->mat->mirr) {
+				glm::vec3 temp_color = intersected_node->mat->refl_color;
+
+				glm::vec3 refl = glm::normalize(glm::reflect(ray.dir, intersec->normal));
+				Ray reflected_ray = Ray(point + refl*epsilon, refl);
+
+				color += temp_color * traceRay(root, reflected_ray, depth + 1);
+			}
+
+			// refraction
+			else if (intersected_node->mat->tran) {
+				float n_i;
+				float n_t;
+				if (intersected_node->geo->isAway()) {
+					n_i = intersected_node->mat->ior;
+					n_t = 1.0;
+				}
+				else {
+					n_t = intersected_node->mat->ior;
+					n_i = 1.0;
+				}
+				glm::vec3 refr = glm::normalize(glm::refract(ray.dir, intersec->normal, n_i/n_t));
+				Ray refracted_ray = Ray(point + refr*epsilon, refr);
+
+				color +=  traceRay(root, refracted_ray, depth + 1);
+			}
+		}
+	}
+
+	return color;
+}
+
+
+/* sets global intersec and intersected_node varibales */
+void Scene::intersect(Node* n, glm::mat4 t, Ray ray) {
 	t = t * n->transformation_matrix;
 
 	if (n->geo != NULL) {
@@ -192,10 +268,35 @@ void Scene::traverse(Node* n, glm::mat4 t, Ray ray) {
 		if (inter.t < intersec->t && inter.t != -1) {
 			intersec->t = inter.t;
 			intersec->normal = inter.normal;
+			intersected_node = n;
 		}
 	}
-
     for (unsigned int i = 0; i < n->children.size(); i++) {
-        traverse(n->children.at(i), t, ray);
+        intersect(n->children.at(i), t, ray);
+    }
+}
+
+/* sets global variable lightBlocked to true if there is 
+ * an object occluding the light source */
+void Scene::pointToLightIntersect(Node* n, glm::mat4 t, Ray ray) {
+	t = t * n->transformation_matrix;
+	
+	if (n->geo != NULL && n != intersected_node) {
+		Intersection inter = n->geo->intersect(t, ray);
+
+		if (inter.t != -1) { 
+			glm::vec3 pt = ray.orig + inter.t * ray.dir;
+
+			float distance = glm::length(pt - ray.orig);
+			float distance_to_light = glm::length(lightPos - ray.orig);
+
+			if (distance <= distance_to_light) {
+				lightBlocked = true;
+				return;
+			}	
+		}
+	}
+	for (unsigned int i = 0; i < n->children.size(); i++) {
+        pointToLightIntersect(n->children.at(i), t, ray);
     }
 }
