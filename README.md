@@ -1,5 +1,6 @@
 raytracer
 =========
 
-Recursive raytracer built on a 3D scene graph that supports Blinn-Phong shading and renders with configurable lights and material properties such as refraction and
-reflection.
+Recursive raytracer built on a 3D scene graph that features Blinn-Phong shading, reflective and refractive materials, soft shadows, super-sample anti-aliasing, and configurable lights.
+
+Also implemented Monte Carlo path tracing to produce more realistic renders with global illumination, caustics, and soft shadows.
