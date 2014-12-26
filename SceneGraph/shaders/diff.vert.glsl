@@ -26,8 +26,8 @@ void main()
     vertPos = vec3(vertPos4) / vertPos4.w;
 
     fs_Normal = vec4(u_ModelInvTr * vec4(vs_Normal, 0.0));
-	fs_Color = vec4(vs_Color, 1);
-	fs_LightVector = u_LightPos - u_Model * vec4(vs_Position, 1);
+	fs_Color = vec4(vs_Color, 1.0);
+	fs_LightVector = u_LightPos - vertPos4;
 
 	lightColor = u_LightColor;
 }

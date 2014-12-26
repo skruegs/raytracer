@@ -257,8 +257,13 @@ void keypress(unsigned char key, int x, int y)
 	glm::mat4 r;
 
     switch (key) {
+
 	case 'p':
-		scene->traceImage();
+		scene->traceImage(false);
+		break;
+
+	case 'm':
+		scene->traceImage(true);
 		break;
 
     case 'q':

@@ -11,6 +11,7 @@
 #include "EasyBMP.h"
 #include "Ray.h"
 #include "Intersection.h"
+#include "Geometry.h"
 
 #ifndef SCENE_H
 #define SCENE_H
@@ -23,11 +24,17 @@ public:
 	bool readFile(const char* filename);
 
 	// raytrace functions
-	void traceImage();
+	void traceImage(bool monte);
+	glm::vec3 traceRayMonteCarlo(Node* root, Ray ray, int depth, glm::vec3 transmittance);
 	glm::vec3 traceRay(Node* root, Ray ray, int depth);
-	// helper functions
+
+	// helper recursive functions
 	void intersect(Node* n, glm::mat4, Ray);
-	void pointToLightIntersect(Node* n, glm::mat4 t, Ray ray); 
+	void pointToLight(Node* n, glm::mat4 t, Ray ray, glm::vec3 light_pt); 
+	// helper sampling functions
+	glm::vec3 getRandomPointOnSphere(Node* n);
+	glm::vec3 getRandomPointOnCube(Node* n);
+	glm::vec3 getCosineWeightedDirection(const glm::vec3& normal);
 
 	// global vars
 	Node* root;
@@ -48,6 +55,9 @@ public:
 	float fovy;
 	glm::vec3 lightPos;
 	glm::vec3 lightColor;
+	int MONTE_CARLO;
+
+	BMP picture;
 
 };
 

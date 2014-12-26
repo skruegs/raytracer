@@ -9,6 +9,7 @@ Material::Material() {
 	ior  = 0;		
 	mirr = 0;		
 	tran = 0;
+	emit_light = 0;
 }
 
 
