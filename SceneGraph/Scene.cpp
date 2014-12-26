@@ -283,7 +283,7 @@ glm::vec3 Scene::traceRayMonteCarlo(Node* root, Ray ray, int depth, glm::vec3 tr
 	if (intersected_node == NULL) {
 		
 		/*int picWidth = picture.TellWidth();
-        int picHeight = picture.TellHeight(); 
+        	int picHeight = picture.TellHeight(); 
 		glm::vec3 rd = glm::normalize(ray.dir);
 
 		return glm::vec3(picture((rd[0]+1)*picWidth/2, (rd[1]+1)*picHeight/2)->Red   / 255, 
@@ -365,74 +365,74 @@ glm::vec3 Scene::traceRay(Node* root, Ray ray, int depth) {
 	// calculate pixel color
 	glm::vec3 color = glm::vec3(0);
 
-	if (intersected_node != NULL) {
-		// point of intersection
-		glm::vec3 point = ray.orig + intersec->t * ray.dir;
-			
-		// soft shadows from area light
-		Node* light_node = nodes.at(0);
-		for (unsigned int i = 0; i < nodes.size(); i++) {
-			if (nodes.at(i)->mat != NULL && nodes.at(i)->mat->emit_light) {
-				light_node = nodes.at(i);
+	if (intersected_node == NULL) 
+		return color;
+		
+	// point of intersection
+	glm::vec3 point = ray.orig + intersec->t * ray.dir;
+		
+	// soft shadows from area light
+	Node* light_node = nodes.at(0);
+	for (unsigned int i = 0; i < nodes.size(); i++) {
+		if (nodes.at(i)->mat != NULL && nodes.at(i)->mat->emit_light) {
+			light_node = nodes.at(i);
+			break;
+		}
+	}						
+	for (int i = 0; i < SHADOW_FEELER_COUNT; i++) {
+		lightBlocked = false;
+		glm::vec3 random_light_pt;
+		switch (light_node->geo->getGeometryType()) {
+			case Geometry::SPHERE:
+				random_light_pt = getRandomPointOnSphere(light_node);
 				break;
-			}
-		}						
-		for (int i = 0; i < SHADOW_FEELER_COUNT; i++) {
-			lightBlocked = false;
-			glm::vec3 random_light_pt;
-			switch (light_node->geo->getGeometryType()) {
-				case Geometry::SPHERE:
-					random_light_pt = getRandomPointOnSphere(light_node);
-					break;
-				case Geometry::CUBE:
-					random_light_pt = getRandomPointOnCube(light_node);
-					break;
-			}
-			glm::vec3 lightDir = glm::normalize(random_light_pt - point);
-			pointToLight(root, glm::mat4(1.0f), Ray(point + lightDir*EPS, lightDir), random_light_pt);
-			if (lightBlocked) {
-				color += glm::vec3(0.1,0.1,0.1) * intersected_node->mat->diff_color;
+			case Geometry::CUBE:
+				random_light_pt = getRandomPointOnCube(light_node);
+				break;
+		}
+		glm::vec3 lightDir = glm::normalize(random_light_pt - point);
+		pointToLight(root, glm::mat4(1.0f), Ray(point + lightDir*EPS, lightDir), random_light_pt);
+		if (lightBlocked) {
+			color += glm::vec3(0.1,0.1,0.1) * intersected_node->mat->diff_color;
+		}
+		else {
+			if (intersected_node->mat->emit_light) color += intersected_node->mat->diff_color;	// light source
+			else color += intersected_node->mat->calculateColor(pos, intersec->normal, point, random_light_pt, lightColor);
+		}		
+	}
+	color /= SHADOW_FEELER_COUNT;
+
+	// limit recursion to a depth of 5
+	if (depth < 5) {
+		// reflection
+		if (intersected_node->mat->mirr) {
+			glm::vec3 temp_color = intersected_node->mat->refl_color;
+
+			glm::vec3 refl = glm::normalize(glm::reflect(ray.dir, intersec->normal));
+			Ray reflected_ray = Ray(point + refl*EPS, refl);
+
+			color += temp_color * traceRay(root, reflected_ray, depth + 1);
+		}
+
+		// refraction
+		else if (intersected_node->mat->tran) {
+			float n_i;
+			float n_t;
+			if (intersected_node->geo->isAway()) {
+				n_i = intersected_node->mat->ior;
+				n_t = 1.0;
 			}
 			else {
-				if (intersected_node->mat->emit_light) color += intersected_node->mat->diff_color;	// light source
-				else color += intersected_node->mat->calculateColor(pos, intersec->normal, point, random_light_pt, lightColor);
-			}		
-		}
-		color /= SHADOW_FEELER_COUNT;
-
-		// limit recursion to a depth of 5
-		if (depth < 5) {
-
-			// reflection
-			if (intersected_node->mat->mirr) {
-				glm::vec3 temp_color = intersected_node->mat->refl_color;
-
-				glm::vec3 refl = glm::normalize(glm::reflect(ray.dir, intersec->normal));
-				Ray reflected_ray = Ray(point + refl*EPS, refl);
-
-				color += temp_color * traceRay(root, reflected_ray, depth + 1);
+				n_t = intersected_node->mat->ior;
+				n_i = 1.0;
 			}
+			glm::vec3 refr = glm::normalize(glm::refract(ray.dir, intersec->normal, n_i/n_t));
+			Ray refracted_ray = Ray(point + refr*EPS, refr);
 
-			// refraction
-			else if (intersected_node->mat->tran) {
-				float n_i;
-				float n_t;
-				if (intersected_node->geo->isAway()) {
-					n_i = intersected_node->mat->ior;
-					n_t = 1.0;
-				}
-				else {
-					n_t = intersected_node->mat->ior;
-					n_i = 1.0;
-				}
-				glm::vec3 refr = glm::normalize(glm::refract(ray.dir, intersec->normal, n_i/n_t));
-				Ray refracted_ray = Ray(point + refr*EPS, refr);
-
-				color +=  traceRay(root, refracted_ray, depth + 1);
-			}
+			color +=  traceRay(root, refracted_ray, depth + 1);
 		}
 	}
-
+	
 	return color;
 }
 
